@@ -4,8 +4,10 @@ from discord.ext import commands
 from quart import Quart, request
 from motor.motor_asyncio import AsyncIOMotorClient
 import aiohttp
-import threading
+import asyncio
 from datetime import datetime
+from hypercorn.config import Config
+from hypercorn.asyncio import serve
 
 # --- Configuration ---
 CLIENT_ID = os.environ.get("CLIENT_ID")
@@ -33,6 +35,9 @@ class VerifyBot(commands.Bot):
     async def setup_hook(self):
         await self.tree.sync()
         print(f"✅ Commands synced for {self.user}")
+        
+        # ওয়েব সার্ভারটিকে বটের ভেতরেই চালু করা হচ্ছে (থ্রেডের ঝামেলা ছাড়া)
+        self.loop.create_task(start_web_server())
 
 bot = VerifyBot()
 
@@ -75,7 +80,26 @@ async def callback():
                     }},
                     upsert=True
                 )
-                return f"✅ Verification Successful, {username}!"
+                
+                # অটোমেটিক পেজ ক্লোজ হওয়ার কোড
+                success_html = f"""
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Verified!</title>
+                    <style>
+                        body {{ background-color: #2b2d31; color: white; font-family: Arial, sans-serif; text-align: center; margin-top: 20%; }}
+                        h1 {{ color: #57F287; }}
+                    </style>
+                    <script>setTimeout(function() {{ window.close(); }}, 2000);</script>
+                </head>
+                <body>
+                    <h1>✅ Verification Successful, {username}!</h1>
+                    <p>You can now close this tab.</p>
+                </body>
+                </html>
+                """
+                return success_html
         
     return "❌ Verification Failed.", 400
 
@@ -101,16 +125,13 @@ async def verify(interaction: discord.Interaction):
     
     await interaction.response.send_message(embed=embed, view=view)
 
-# --- Background Web Server ---
-def run_web():
-    # Render-এর জন্য ডাইনামিক পোর্ট সেট করা
+# --- Start Web Server Function ---
+async def start_web_server():
+    config = Config()
     port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    config.bind = [f"0.0.0.0:{port}"]
+    print(f"Starting web server on port {port}...")
+    await serve(app, config)
 
 if __name__ == "__main__":
-    # ওয়েব সার্ভার আলাদা থ্রেডে চালু করা
-    t = threading.Thread(target=run_web, daemon=True)
-    t.start()
-    
-    # এরর এড়াতে সাধারণ bot.run ব্যবহার করা হয়েছে
     bot.run(BOT_TOKEN)
