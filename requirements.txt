@@ -2,3 +2,4 @@ discord.py>=2.0.0
 quart
 motor
 aiohttp
+hypercorn
