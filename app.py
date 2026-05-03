@@ -18,6 +18,8 @@ GUILD_ID = int(os.environ.get("GUILD_ID", "0"))
 ROLE_ID = int(os.environ.get("ROLE_ID", "0"))
 REDIRECT_URI = "https://verifybot-shjs.onrender.com/callback"
 
+print(f"🔧 Config loaded: GUILD_ID={GUILD_ID}, ROLE_ID={ROLE_ID}")
+
 # --- Database Setup ---
 cluster = AsyncIOMotorClient(MONGO_URI)
 db = cluster["VerifyBot"]
@@ -35,8 +37,15 @@ class VerifyBot(commands.Bot):
         super().__init__(command_prefix="!", intents=intents)
 
     async def setup_hook(self):
-        await self.tree.sync()
-        print(f"✅ Commands synced for {self.user}")
+        try:
+            await self.tree.sync()
+            print(f"✅ Commands synced for {self.user}")
+        except Exception as e:
+            print(f"❌ Command sync failed: {e}")
+
+    async def on_ready(self):
+        print(f"🤖 Bot is ready! Logged in as {self.user}")
+        print(f"🏠 Guild ID: {GUILD_ID}, Role ID: {ROLE_ID}")
 
 bot = VerifyBot()
 
@@ -85,16 +94,26 @@ async def callback():
             upsert=True
         )
 
+        print(f"📝 User saved: {username} ({user_id})")
+
         try:
             guild = bot.get_guild(GUILD_ID)
             if guild is None:
+                print(f"⚠️ Guild not in cache, fetching...")
                 guild = await bot.fetch_guild(GUILD_ID)
+
+            print(f"✅ Guild found: {guild.name}")
 
             member = guild.get_member(int(user_id))
             if member is None:
+                print(f"⚠️ Member not in cache, fetching...")
                 member = await guild.fetch_member(int(user_id))
 
+            print(f"✅ Member found: {member.name}")
+
             role = guild.get_role(ROLE_ID)
+            print(f"🔍 Role found: {role}")
+
             if role and member:
                 await member.add_roles(role, reason="Verified via OAuth2")
                 print(f"✅ Role given to {username} ({user_id})")
