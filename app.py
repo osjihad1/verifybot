@@ -8,11 +8,14 @@ import aiohttp
 import threading
 
 # --- Configuration ---
-CLIENT_ID = "YOUR_CLIENT_ID"
-CLIENT_SECRET = "YOUR_CLIENT_SECRET"
-REDIRECT_URI = "https://your-app-name.render.com/callback"
+# সরাসরি আইডি বা সিক্রেট না লিখে os.environ.get ব্যবহার করো
+CLIENT_ID = os.environ.get("CLIENT_ID")
+CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 MONGO_URI = os.environ.get("MONGO_URI")
+
+# তোমার রেন্ডার অ্যাপের ইউআরএলটি এখানে দাও
+REDIRECT_URI = "https://your-app-name.onrender.com/callback"
 
 # --- Database Setup ---
 cluster = AsyncIOMotorClient(MONGO_URI)
