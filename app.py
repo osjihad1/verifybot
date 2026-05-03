@@ -5,7 +5,6 @@ from quart import Quart, request
 from motor.motor_asyncio import AsyncIOMotorClient
 import aiohttp
 import threading
-import asyncio
 from datetime import datetime
 
 # --- Configuration ---
@@ -26,10 +25,9 @@ app = Quart(__name__)
 # --- Discord Bot Setup ---
 class VerifyBot(commands.Bot):
     def __init__(self):
-        # এখানে ইন্টেন্টস ফিক্স করা হয়েছে
         intents = discord.Intents.default()
         intents.members = True 
-        intents.message_content = True # এই লাইনটি অ্যাড করা হয়েছে
+        intents.message_content = True
         super().__init__(command_prefix="!", intents=intents)
 
     async def setup_hook(self):
@@ -82,7 +80,7 @@ async def callback():
     return "❌ Verification Failed.", 400
 
 # --- Slash Command ---
-@bot.tree.command(name="verify", description="Get verified")
+@bot.tree.command(name="verify", description="Get verified and gain access")
 async def verify(interaction: discord.Interaction):
     auth_url = (
         f"https://discord.com/api/oauth2/authorize?client_id={CLIENT_ID}"
@@ -92,7 +90,7 @@ async def verify(interaction: discord.Interaction):
     
     embed = discord.Embed(
         title="🛡️ Member Verification",
-        description="Click the button below to verify.",
+        description="To access the server, click the button below and verify your account.",
         color=0x2b2d31
     )
     embed.set_image(url="https://i.imgur.com/fpdYZ4d.gif")
@@ -105,14 +103,14 @@ async def verify(interaction: discord.Interaction):
 
 # --- Background Web Server ---
 def run_web():
+    # Render-এর জন্য ডাইনামিক পোর্ট সেট করা
     port = int(os.environ.get("PORT", 10000))
-    # রেন্ডারের জন্য লুপ হ্যান্ডলিং ফিক্স
-    app.run(host="0.0.0.0", port=port, use_reloader=False)
+    app.run(host="0.0.0.0", port=port)
 
 if __name__ == "__main__":
-    # ওয়েব সার্ভার থ্রেড চালু করা
+    # ওয়েব সার্ভার আলাদা থ্রেডে চালু করা
     t = threading.Thread(target=run_web, daemon=True)
     t.start()
     
-    # bot.run এ handle_signals=False দিলে মেইন থ্রেড এরর আসবে না
-    bot.run(BOT_TOKEN, handle_signals=False)
+    # এরর এড়াতে সাধারণ bot.run ব্যবহার করা হয়েছে
+    bot.run(BOT_TOKEN)
