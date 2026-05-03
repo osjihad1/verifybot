@@ -1,5 +1,6 @@
-discord.py>=2.0.0
+discord.py
 quart
 motor
 aiohttp
 hypercorn
+pymongo
