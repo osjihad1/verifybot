@@ -24,31 +24,19 @@ users_col = db["verified_users"]
 # --- Web Server Setup ---
 app = Quart(__name__)
 
-# --- Start Web Server Function (Hypercorn) ---
-async def start_web_server():
-    config = Config()
-    port = int(os.environ.get("PORT", 10000))
-    config.bind = [f"0.0.0.0:{port}"]
-    print(f"Starting web server on port {port}...")
-    await serve(app, config)
-
 # --- Discord Bot Setup ---
 class VerifyBot(commands.Bot):
     def __init__(self):
         intents = discord.Intents.default()
-        intents.members = True 
+        intents.members = True
         intents.message_content = True
         super().__init__(command_prefix="!", intents=intents)
 
     async def setup_hook(self):
         await self.tree.sync()
         print(f"✅ Commands synced for {self.user}")
-        # থ্রেডের বদলে ডিসকর্ডের মেইন লুপেই সার্ভারটি চালানো হচ্ছে
-        self.loop.create_task(start_web_server())
 
-bot = VerifyBot()
-
-# --- OAuth2 Logic ---
+# --- OAuth2 Callback Route ---
 @app.route('/callback')
 async def callback():
     code = request.args.get('code')
@@ -64,7 +52,7 @@ async def callback():
             'redirect_uri': REDIRECT_URI
         }
         headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-        
+
         async with session.post('https://discord.com/api/oauth2/token', data=data, headers=headers) as resp:
             token_data = await resp.json()
             access_token = token_data.get('access_token')
@@ -87,7 +75,7 @@ async def callback():
                     }},
                     upsert=True
                 )
-                
+
                 success_html = f"""
                 <!DOCTYPE html>
                 <html>
@@ -106,10 +94,17 @@ async def callback():
                 </html>
                 """
                 return success_html
-        
+
     return "❌ Verification Failed.", 400
 
+# --- Health Check Route (optional but useful) ---
+@app.route('/')
+async def index():
+    return "✅ VerifyBot is running!", 200
+
 # --- Slash Command ---
+bot = VerifyBot()
+
 @bot.tree.command(name="verify", description="Get verified and gain access")
 async def verify(interaction: discord.Interaction):
     auth_url = (
@@ -117,7 +112,7 @@ async def verify(interaction: discord.Interaction):
         f"&redirect_uri={REDIRECT_URI.replace(':', '%3A').replace('/', '%2F')}"
         f"&response_type=code&scope=identify%20guilds.join"
     )
-    
+
     embed = discord.Embed(
         title="🛡️ Member Verification",
         description="To access the server, click the button below and verify your account.",
@@ -128,8 +123,22 @@ async def verify(interaction: discord.Interaction):
     view = discord.ui.View()
     button = discord.ui.Button(label="Verify Now", url=auth_url, emoji="✅")
     view.add_item(button)
-    
+
     await interaction.response.send_message(embed=embed, view=view)
 
+# --- Main Entry Point ---
+async def main():
+    # Hypercorn config
+    config = Config()
+    port = int(os.environ.get("PORT", 10000))
+    config.bind = [f"0.0.0.0:{port}"]
+    print(f"🌐 Starting web server on port {port}...")
+
+    # Run both the web server and the Discord bot concurrently
+    await asyncio.gather(
+        serve(app, config),
+        bot.start(BOT_TOKEN)
+    )
+
 if __name__ == "__main__":
-    bot.run(BOT_TOKEN)
+    asyncio.run(main())
