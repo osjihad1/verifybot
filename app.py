@@ -14,8 +14,8 @@ CLIENT_ID = os.environ.get("CLIENT_ID")
 CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 MONGO_URI = os.environ.get("MONGO_URI")
-GUILD_ID = int(os.environ.get("GUILD_ID"))
-ROLE_ID = int(os.environ.get("ROLE_ID"))
+GUILD_ID = int(os.environ.get("GUILD_ID", "0"))
+ROLE_ID = int(os.environ.get("ROLE_ID", "0"))
 REDIRECT_URI = "https://verifybot-shjs.onrender.com/callback"
 
 # --- Database Setup ---
