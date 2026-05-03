@@ -104,23 +104,64 @@ async def callback():
         except Exception as e:
             print(f"❌ Failed to assign role to {username}: {e}")
 
-    success_html = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Verified!</title>
-        <style>
-            body {{ background-color: #2b2d31; color: white; font-family: Arial, sans-serif; text-align: center; margin-top: 20%; }}
-            h1 {{ color: #57F287; }}
-        </style>
-        <script>setTimeout(function() {{ window.close(); }}, 2000);</script>
-    </head>
-    <body>
-        <h1>✅ Verification Successful, {username}!</h1>
-        <p>You can now close this tab.</p>
-    </body>
-    </html>
-    """
+    success_html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verified!</title>
+<style>
+*{{margin:0;padding:0;box-sizing:border-box}}
+body{{background:#0d1117;font-family:'Segoe UI',Arial,sans-serif}}
+.page{{min-height:100vh;background:radial-gradient(ellipse at top left,#1a1b2e 0%,#0d1117 60%);display:flex;align-items:center;justify-content:center;padding:2rem;position:relative;overflow:hidden}}
+.glow{{position:absolute;border-radius:50%;filter:blur(80px);opacity:.15;pointer-events:none}}
+.g1{{width:400px;height:400px;background:#5865F2;top:-100px;left:-100px}}
+.g2{{width:400px;height:400px;background:#57F287;bottom:-100px;right:-100px}}
+.card{{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:3rem 2.5rem;text-align:center;max-width:420px;width:100%;position:relative;backdrop-filter:blur(20px)}}
+.card::before{{content:'';position:absolute;inset:0;border-radius:20px;padding:1px;background:linear-gradient(135deg,rgba(88,101,242,.4),rgba(87,242,135,.2),transparent);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:destination-out;mask-composite:exclude;pointer-events:none}}
+.icon-wrap{{width:80px;height:80px;border-radius:50%;background:rgba(87,242,135,.12);border:2px solid rgba(87,242,135,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;animation:pop .5s ease}}
+@keyframes pop{{0%{{transform:scale(.5);opacity:0}}70%{{transform:scale(1.1)}}100%{{transform:scale(1);opacity:1}}}}
+.checkmark{{width:36px;height:36px;stroke:#57F287;stroke-width:3;fill:none;stroke-dasharray:60;stroke-dashoffset:60;animation:draw .6s .3s ease forwards}}
+@keyframes draw{{to{{stroke-dashoffset:0}}}}
+.badge{{display:inline-flex;align-items:center;gap:6px;background:rgba(88,101,242,.15);border:1px solid rgba(88,101,242,.3);border-radius:20px;padding:4px 12px;font-size:12px;color:#8b96f8;letter-spacing:.5px;text-transform:uppercase;margin-bottom:1.2rem}}
+.dot{{width:6px;height:6px;border-radius:50%;background:#5865F2;animation:pulse 1.5s infinite}}
+@keyframes pulse{{0%,100%{{opacity:1;transform:scale(1)}}50%{{opacity:.5;transform:scale(.8)}}}}
+h1{{font-size:26px;font-weight:700;color:#fff;margin-bottom:.5rem}}
+.uname{{color:#57F287}}
+.sub{{font-size:14px;color:rgba(255,255,255,.4);line-height:1.6;margin-bottom:1.5rem}}
+.divider{{height:1px;background:rgba(255,255,255,.06);margin:1.2rem 0}}
+.row{{display:flex;align-items:center;justify-content:space-between;font-size:13px;margin-bottom:10px}}
+.lbl{{color:rgba(255,255,255,.35)}}
+.val{{color:rgba(255,255,255,.7);font-weight:500}}
+.pill{{background:rgba(87,242,135,.12);color:#57F287;border-radius:20px;padding:2px 10px;font-size:12px}}
+.bar{{height:3px;background:rgba(255,255,255,.06);border-radius:2px;margin-top:1.5rem;overflow:hidden}}
+.fill{{height:100%;width:100%;background:linear-gradient(90deg,#5865F2,#57F287);animation:shrink 3s linear forwards}}
+@keyframes shrink{{to{{width:0%}}}}
+.hint{{font-size:12px;color:rgba(255,255,255,.2);margin-top:.6rem}}
+</style>
+</head>
+<body>
+<div class="page">
+<div class="glow g1"></div>
+<div class="glow g2"></div>
+<div class="card">
+  <div class="badge"><div class="dot"></div>Server Access Granted</div>
+  <div class="icon-wrap">
+    <svg class="checkmark" viewBox="0 0 24 24"><polyline points="4,12 9,17 20,7"/></svg>
+  </div>
+  <h1>Welcome, <span class="uname">{username}!</span></h1>
+  <p class="sub">Your identity has been verified.<br>You now have full access to the server.</p>
+  <div class="divider"></div>
+  <div class="row"><span class="lbl">Status</span><span class="pill">Verified Member</span></div>
+  <div class="row"><span class="lbl">Access level</span><span class="val">Member</span></div>
+  <div class="row"><span class="lbl">Username</span><span class="val">{username}</span></div>
+  <div class="bar"><div class="fill"></div></div>
+  <p class="hint">This tab will close automatically...</p>
+</div>
+</div>
+<script>setTimeout(()=>window.close(),3000)</script>
+</body>
+</html>"""
     return success_html
 
 @app.route('/')
