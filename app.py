@@ -24,6 +24,14 @@ users_col = db["verified_users"]
 # --- Web Server Setup ---
 app = Quart(__name__)
 
+# --- Start Web Server Function (Hypercorn) ---
+async def start_web_server():
+    config = Config()
+    port = int(os.environ.get("PORT", 10000))
+    config.bind = [f"0.0.0.0:{port}"]
+    print(f"Starting web server on port {port}...")
+    await serve(app, config)
+
 # --- Discord Bot Setup ---
 class VerifyBot(commands.Bot):
     def __init__(self):
@@ -35,8 +43,7 @@ class VerifyBot(commands.Bot):
     async def setup_hook(self):
         await self.tree.sync()
         print(f"✅ Commands synced for {self.user}")
-        
-        # ওয়েব সার্ভারটিকে বটের ভেতরেই চালু করা হচ্ছে (থ্রেডের ঝামেলা ছাড়া)
+        # থ্রেডের বদলে ডিসকর্ডের মেইন লুপেই সার্ভারটি চালানো হচ্ছে
         self.loop.create_task(start_web_server())
 
 bot = VerifyBot()
@@ -81,7 +88,6 @@ async def callback():
                     upsert=True
                 )
                 
-                # অটোমেটিক পেজ ক্লোজ হওয়ার কোড
                 success_html = f"""
                 <!DOCTYPE html>
                 <html>
@@ -124,14 +130,6 @@ async def verify(interaction: discord.Interaction):
     view.add_item(button)
     
     await interaction.response.send_message(embed=embed, view=view)
-
-# --- Start Web Server Function ---
-async def start_web_server():
-    config = Config()
-    port = int(os.environ.get("PORT", 10000))
-    config.bind = [f"0.0.0.0:{port}"]
-    print(f"Starting web server on port {port}...")
-    await serve(app, config)
 
 if __name__ == "__main__":
     bot.run(BOT_TOKEN)
