@@ -15,7 +15,7 @@ BOT_TOKEN = os.environ.get("BOT_TOKEN")
 MONGO_URI = os.environ.get("MONGO_URI")
 
 # তোমার রেন্ডার অ্যাপের ইউআরএলটি এখানে দাও
-REDIRECT_URI = "https://your-app-name.onrender.com/callback"
+REDIRECT_URI = "https://verifybot-shjs.onrender.com/callback"
 
 # --- Database Setup ---
 cluster = AsyncIOMotorClient(MONGO_URI)
