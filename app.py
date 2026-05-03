@@ -202,7 +202,7 @@ async def verify(interaction: discord.Interaction):
         description="To access the server, click the button below and verify your account.",
         color=0x2b2d31
     )
-    embed.set_image(url="https://i.imgur.com/fpdYZ4d.gif")
+    embed.set_image(url="https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExMjFzejhrZmNtbDlnc3ByaTNjMG5mc2pmbWR2N2g2eGV3aW95dnF3MSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/1TDubhIDWTkbXstaqG/giphy.gif")
 
     view = discord.ui.View()
     button = discord.ui.Button(label="Verify Now", url=auth_url, emoji="✅")
