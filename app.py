@@ -188,6 +188,7 @@ h1{{font-size:26px;font-weight:700;color:#fff;margin-bottom:.5rem}}
 async def index():
     return "✅ VerifyBot is running!", 200
 
+# ✅ FIXED: নাম আর দেখাবে না, কিন্তু bot card সবাই দেখবে
 @bot.tree.command(name="verify", description="Get verified and gain access")
 async def verify(interaction: discord.Interaction):
     auth_url = (
@@ -207,7 +208,9 @@ async def verify(interaction: discord.Interaction):
     button = discord.ui.Button(label="Verify Now", url=auth_url, emoji="✅")
     view.add_item(button)
 
-    await interaction.response.send_message(embed=embed, view=view)
+    # 👇 এই দুই লাইনই সব magic করে
+    await interaction.response.send_message("✅", ephemeral=True)  # শুধু তুমি দেখবে
+    await interaction.channel.send(embed=embed, view=view)  # সবাই দেখবে
 
 async def main():
     config = Config()
