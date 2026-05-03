@@ -1,21 +1,18 @@
 import os
 import discord
 from discord.ext import commands
-from discord import app_commands
 from quart import Quart, request
 from motor.motor_asyncio import AsyncIOMotorClient
 import aiohttp
 import threading
+import asyncio
 from datetime import datetime
 
 # --- Configuration ---
-# Render Environment Variables থেকে এগুলো অটোমেটিক আসবে
 CLIENT_ID = os.environ.get("CLIENT_ID")
 CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 MONGO_URI = os.environ.get("MONGO_URI")
-
-# আপনার দেওয়া রেন্ডার ইউআরএল
 REDIRECT_URI = "https://verifybot-shjs.onrender.com/callback"
 
 # --- Database Setup ---
@@ -29,12 +26,13 @@ app = Quart(__name__)
 # --- Discord Bot Setup ---
 class VerifyBot(commands.Bot):
     def __init__(self):
+        # এখানে ইন্টেন্টস ফিক্স করা হয়েছে
         intents = discord.Intents.default()
-        intents.members = True  # মেম্বারদের রোল দেওয়ার জন্য এটি জরুরি
+        intents.members = True 
+        intents.message_content = True # এই লাইনটি অ্যাড করা হয়েছে
         super().__init__(command_prefix="!", intents=intents)
 
     async def setup_hook(self):
-        # স্ল্যাশ কমান্ড সিঙ্ক করা
         await self.tree.sync()
         print(f"✅ Commands synced for {self.user}")
 
@@ -48,7 +46,6 @@ async def callback():
         return "❌ Error: No code provided.", 400
 
     async with aiohttp.ClientSession() as session:
-        # এক্সচেঞ্জ কোড ফর টোকেন (Access & Refresh Token)
         data = {
             'client_id': CLIENT_ID,
             'client_secret': CLIENT_SECRET,
@@ -64,14 +61,12 @@ async def callback():
             refresh_token = token_data.get('refresh_token')
 
         if access_token:
-            # ইউজারের আইডি এবং তথ্য বের করা
             headers = {'Authorization': f'Bearer {access_token}'}
             async with session.get('https://discord.com/api/users/@me', headers=headers) as resp:
                 user_info = await resp.json()
                 user_id = user_info.get('id')
                 username = user_info.get('username')
 
-                # MongoDB-তে পার্মানেন্টলি সেভ করা (ভবিষ্যতে ব্যাকআপের জন্য)
                 await users_col.update_one(
                     {"_id": user_id},
                     {"$set": {
@@ -82,14 +77,13 @@ async def callback():
                     }},
                     upsert=True
                 )
-                return f"✅ Verification Successful, {username}! You can close this window now."
+                return f"✅ Verification Successful, {username}!"
         
-    return "❌ Verification Failed. Please try again.", 400
+    return "❌ Verification Failed.", 400
 
-# --- Slash Command: /verify ---
-@bot.tree.command(name="verify", description="Get verified and access all channels")
+# --- Slash Command ---
+@bot.tree.command(name="verify", description="Get verified")
 async def verify(interaction: discord.Interaction):
-    # অথোরাইজেশন ইউআরএল (Scopes: identify এবং guilds.join)
     auth_url = (
         f"https://discord.com/api/oauth2/authorize?client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URI.replace(':', '%3A').replace('/', '%2F')}"
@@ -98,38 +92,27 @@ async def verify(interaction: discord.Interaction):
     
     embed = discord.Embed(
         title="🛡️ Member Verification",
-        description=(
-            "To gain full access to the server, please click the button below to verify your account.\n\n"
-            "**Why verify?**\n"
-            "✅ Protection against raids\n"
-            "✅ Member backup status\n"
-            "✅ Access to hidden channels"
-        ),
+        description="Click the button below to verify.",
         color=0x2b2d31
     )
-    # আপনার আগের দেওয়া সেই গিফ ইমেজটি এখানে ব্যবহার করা হয়েছে
     embed.set_image(url="https://i.imgur.com/fpdYZ4d.gif")
-    embed.set_footer(text="Shadow Verify System • Secure & Fast")
 
     view = discord.ui.View()
-    button = discord.ui.Button(
-        label="Verify Now", 
-        url=auth_url, 
-        style=discord.ButtonStyle.link,
-        emoji="✅"
-    )
+    button = discord.ui.Button(label="Verify Now", url=auth_url, emoji="✅")
     view.add_item(button)
     
     await interaction.response.send_message(embed=embed, view=view)
 
-# --- Background Web Server with Port Binding Fix ---
+# --- Background Web Server ---
 def run_web():
-    # Render-এর দেওয়া ডাইনামিক পোর্ট ধরা (PORT না থাকলে ডিফল্ট ১০০০০)
     port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    # রেন্ডারের জন্য লুপ হ্যান্ডলিং ফিক্স
+    app.run(host="0.0.0.0", port=port, use_reloader=False)
 
 if __name__ == "__main__":
-    # ওয়েব সার্ভার আলাদা থ্রেডে চালানো
-    threading.Thread(target=run_web, daemon=True).start()
-    # ডিসকর্ড বট চালানো
-    bot.run(BOT_TOKEN)
+    # ওয়েব সার্ভার থ্রেড চালু করা
+    t = threading.Thread(target=run_web, daemon=True)
+    t.start()
+    
+    # bot.run এ handle_signals=False দিলে মেইন থ্রেড এরর আসবে না
+    bot.run(BOT_TOKEN, handle_signals=False)
