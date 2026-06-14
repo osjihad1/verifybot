@@ -17,7 +17,7 @@ MONGO_URI = os.environ.get("MONGO_URI")
 GUILD_ID = int(os.environ.get("GUILD_ID", "0"))
 ROLE_ID = int(os.environ.get("ROLE_ID", "0"))
 print("🔧 APP STARTING...")
-REDIRECT_URI = "https://verifybot-e3wh.onrender.com/callback"
+REDIRECT_URI = "https://verifybot-shjs.onrender.com/callback"
 
 print(f"🔧 Config loaded: GUILD_ID={GUILD_ID}, ROLE_ID={ROLE_ID}")
 
