@@ -213,7 +213,7 @@ async def verify(interaction: discord.Interaction):
 # --- Self-Ping to prevent Render sleep ---
 async def self_ping():
     await bot.wait_until_ready()
-    url = "https://verifybot-e3wh.onrender.com/"
+    url = "https://verifybot-shjs.onrender.com"
     while not bot.is_closed():
         try:
             async with aiohttp.ClientSession() as session:
